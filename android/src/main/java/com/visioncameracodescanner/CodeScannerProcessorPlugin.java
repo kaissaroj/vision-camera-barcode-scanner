@@ -1,5 +1,10 @@
 package com.visioncameracodescanner;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.graphics.ImageFormat;
 import android.media.Image;
 import android.util.Log;
@@ -9,6 +14,7 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.common.internal.ImageConvertUtils;
 import com.mrousavy.camera.core.FrameInvalidError;
 import com.mrousavy.camera.frameprocessors.Frame;
 import com.mrousavy.camera.frameprocessors.FrameProcessorPlugin;
@@ -60,9 +66,35 @@ public class CodeScannerProcessorPlugin extends FrameProcessorPlugin {
 
     BarcodeScanner scanner = getBarcodeScannerClient(params);
 
+    // Getting checkInverted parameter from options
+    boolean checkInverted = false;
+    if (params != null && params.containsKey("checkInverted")) {
+      Object checkInvertedObj = params.get("checkInverted");
+      if (checkInvertedObj instanceof Boolean) {
+        checkInverted = (Boolean) checkInvertedObj;
+      }
+    }
+
     List<Object> barcodes = new ArrayList<>();
     try {
-      List<Barcode> barcodeList = Tasks.await(scanner.process(inputImage));
+      List<Barcode> barcodeList = new ArrayList<>();
+      
+      // Process regular image
+      barcodeList.addAll(Tasks.await(scanner.process(inputImage)));
+      
+      // Process inverted image if requested
+      if (checkInverted) {
+        try {
+          Bitmap bitmap = ImageConvertUtils.getInstance().getUpRightBitmap(inputImage);
+          Bitmap invertedBitmap = invert(bitmap);
+          InputImage invertedImage = InputImage.fromBitmap(invertedBitmap, 0);
+          barcodeList.addAll(Tasks.await(scanner.process(invertedImage)));
+        } catch (Exception e) {
+          Log.e(TAG, "Error processing inverted image: " + e.getMessage());
+        }
+      }
+      
+      // Convert all found barcodes
       barcodeList.forEach(
           barcode -> barcodes.add(BarcodeConverter.convertBarcode(barcode)));
     } catch (ExecutionException | InterruptedException e) {
@@ -71,6 +103,34 @@ public class CodeScannerProcessorPlugin extends FrameProcessorPlugin {
     }
 
     return barcodes;
+  }
+
+  // Bitmap Inversion method from old code
+  private Bitmap invert(Bitmap src) { 
+    int height = src.getHeight();
+    int width = src.getWidth();    
+
+    Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+    Canvas canvas = new Canvas(bitmap);
+    Paint paint = new Paint();
+    
+    ColorMatrix matrixGrayscale = new ColorMatrix();
+    matrixGrayscale.setSaturation(0);
+    
+    ColorMatrix matrixInvert = new ColorMatrix();
+    matrixInvert.set(new float[] {
+      -1.0f, 0.0f, 0.0f, 0.0f, 255.0f,
+      0.0f, -1.0f, 0.0f, 0.0f, 255.0f,
+      0.0f, 0.0f, -1.0f, 0.0f, 255.0f,
+      0.0f, 0.0f, 0.0f, 1.0f, 0.0f
+    });
+    matrixInvert.preConcat(matrixGrayscale);
+    
+    ColorMatrixColorFilter filter = new ColorMatrixColorFilter(matrixInvert);
+    paint.setColorFilter(filter);
+    
+    canvas.drawBitmap(src, 0, 0, paint);
+    return bitmap;
   }
 
   @Nullable

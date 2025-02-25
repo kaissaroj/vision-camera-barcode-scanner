@@ -23,6 +23,7 @@ export type UseBarcodeScannerOptions = {
   resizeMode?: ResizeMode;
   scanMode?: "continuous" | "once";
   isMountedRef?: { value: boolean };
+  checkInverted?:boolean;
 };
 
 export const useBarcodeScanner = ({
@@ -34,6 +35,7 @@ export const useBarcodeScanner = ({
   scanMode = "continuous",
   isMountedRef,
   fps = 5,
+  checkInverted = false
 }: UseBarcodeScannerOptions) => {
   // Layout of the <Camera /> component
   const layoutRef = useSharedValue<Size>({ width: 0, height: 0 });
@@ -71,6 +73,8 @@ export const useBarcodeScanner = ({
         if (barcodeTypes !== undefined) {
           options.barcodeTypes = barcodeTypes;
         }
+        options.checkInverted = checkInverted;
+
         if (regionOfInterest !== undefined) {
           const { x, y, width, height } = regionOfInterest;
           options.regionOfInterest = [x, y, width, height];

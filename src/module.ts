@@ -51,6 +51,7 @@ const visionCameraProcessorPlugin = VisionCameraProxy.initFrameProcessorPlugin(
 export type ScanBarcodesOptions = {
   barcodeTypes?: BarcodeType[];
   regionOfInterest?: [number, number, number, number];
+  checkInverted?:boolean
 };
 
 export const scanCodes = (
