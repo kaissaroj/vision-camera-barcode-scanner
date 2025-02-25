@@ -1,171 +1,116 @@
 # vision-camera-barcode-scanner
 
-<!-- markdownlint-disable MD033 -->
-<p align="center">
-  <a href="https://mgcrea.github.io/vision-camera-barcode-scanner">
-    <img src="./.github/assets/logo.png" alt="logo" width="320" height="200"/>
-  </a>
-</p>
-<p align="center">
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/v/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm version" />
-  </a>
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/dt/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm total downloads" />
-  </a>
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/dm/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm monthly downloads" />
-  </a>
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/l/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm license" />
-  </a>
-  <br />
-  <a href="https://github.com/mgcrea/vision-camera-barcode-scanner/actions/workflows/main.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/mgcrea/vision-camera-barcode-scanner/main.yml?style=for-the-badge&branch=master" alt="build status" />
-  </a>
-  <a href="https://depfu.com/github/mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/depfu/dependencies/github/mgcrea/vision-camera-barcode-scanner?style=for-the-badge" alt="dependencies status" />
-  </a>
-</p>
-<!-- markdownlint-enable MD037 -->
+A React Native library for barcode scanning using VisionCamera, forked from [mgcrea/vision-camera-barcode-scanner](https://github.com/mgcrea/vision-camera-barcode-scanner) with added support for inverted barcode scanning.
 
 ## Features
 
-High performance barcode scanner for React Native using VisionCamera.
+- Scan barcodes and QR codes using VisionCamera
+- Support for various barcode formats
+- High performance with worklets
+- Region of interest support
+- Different scan modes: continuous, manual
+- **NEW: With Inverted Scanning Feature - Scan inverted barcodes and QR codes**
 
-- **Modern and future-proof:** Built on [react-native-vision-camera](https://github.com/mrousavy/react-native-vision-camera) with minimal native dependencies for each platforms to minimize future build-failure risk.
-
-- **Minimal footprint:** Leverages [Google's MLKit BarcodeScanner](https://developers.google.com/android/reference/com/google/mlkit/vision/barcode/package-summary) on Android and [Apple's Vision VNDetectBarcodesRequest](https://developer.apple.com/documentation/vision/vndetectbarcodesrequest).
-
-- **Powerful & Performant:** The implementation has been tailored for advanced use cases where performance is critical. Scanning barcodes is butter smooth at 30fps, and you can customize the detection speed loop (detection fps).
-
-- **Hooks based:** Exposes easy-to-use hooks [`useBarcodeScanner`](./src/hooks/useBarcodeScanner.ts) to quickly get started
-
-<!-- Check the [**Documentation**](https://mgcrea.github.io/vision-camera-barcode-scanner/) for usage details. -->
-
-## Demo
-
-![demo](./.github/assets/demo.gif)
-
-A working project can be found at [vision-camera-barcode-scanner-example](./example)
-
-## Install
-
-> [!WARNING]
-> The project is currently trying to closely track the [react-native-vision-camera v4](https://github.com/mrousavy/react-native-vision-camera/releases),
-> The latest 0.11+ releases are made to work with the latest react-native-vision-camera release only (currently 4.0.0)
+## Installation
 
 ```bash
-npm install @mgcrea/vision-camera-barcode-scanner
+npm i @kaizer433/vision-camera-barcode-scanner
 # or
-yarn add @mgcrea/vision-camera-barcode-scanner
-# or
-pnpm add @mgcrea/vision-camera-barcode-scanner
+yarn add @kaizer433/vision-camera-barcode-scanner
 ```
 
-### Dependencies
-
-This package relies on:
-
-- [react-native-vision-camera@>=3](https://github.com/mrousavy/react-native-vision-camera)
-- [react-native-worklets-core](https://github.com/margelo/react-native-worklets-core)
-
-You must add them as dependencies to your project:
+Make sure to also install the required peer dependencies:
 
 ```bash
 npm install react-native-vision-camera react-native-worklets-core
 # or
 yarn add react-native-vision-camera react-native-worklets-core
-# or
-pnpm add react-native-vision-camera react-native-worklets-core
 ```
 
-Then you must follow their respective installation instructions:
+## Usage
 
-- [react-native-worklets-core](https://github.com/margelo/react-native-worklets-core#installation)
-
-## Quickstart
-
-```tsx
+```jsx
+import React from "react";
+import { View, Text } from "react-native";
 import {
-  CameraHighlights,
-  useBarcodeScanner,
-} from "@mgcrea/vision-camera-barcode-scanner";
-import type { FunctionComponent } from "react";
-import { StyleSheet } from "react-native";
+  useCameraDevices,
+  useCameraFormat,
+  Templates,
+} from "react-native-vision-camera";
+import { BarcodeCamera } from "@kaizer433/vision-camera-barcode-scanner";
 
-export const App: FunctionComponent = () => {
-  // @NOTE you must properly ask for camera permissions first!
-  // You should use `PermissionsAndroid` for Android and `Camera.requestCameraPermission()` on iOS.
-
-  const { props: cameraProps, highlights } = useBarcodeScanner({
-    fps: 5,
-    barcodeTypes: ["qr", "ean-13"], // optional
-    onBarcodeScanned: (barcodes) => {
-      "worklet";
-      console.log(
-        `Scanned ${barcodes.length} codes with values=${JSON.stringify(
-          barcodes.map(({ value }) => value),
-        )} !`,
-      );
-    },
-  });
-
+export const BarcodeScannerScreen = () => {
   const devices = useCameraDevices();
   const device = devices.find(({ position }) => position === "back");
-  const format = useCameraFormat(device, [
-    { videoResolution: { width: 1920, height: 1080 } },
-  ]);
+  const format = useCameraFormat(device, Templates.FrameProcessingBarcodeXGA);
+
+  const handleBarcodeScanned = (barcodes) => {
+    console.log("Scanned barcodes:", barcodes);
+  };
+
   if (!device) {
-    return null;
+    return <Text>Loading camera...</Text>;
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <Camera
-        style={StyleSheet.absoluteFill}
+      <BarcodeCamera
         device={device}
-        isActive
-        {...cameraProps}
+        format={format}
+        onBarcodeScanned={handleBarcodeScanned}
+        style={{ flex: 1 }}
+        barcodeTypes={["ean-13", "qr"]}
+        checkInverted={true} // Enable scanning of inverted barcodes
       />
-      <CameraHighlights highlights={highlights} color="peachpuff" />
     </View>
   );
 };
 ```
 
-## Credits
+## Configuration
 
-Inspired by:
+The `BarcodeCamera` component accepts the following props:
 
-- [rodgomesc/vision-camera-code-scanner](https://github.com/rodgomesc/vision-camera-code-scanner)
+| Prop                | Type                                                      | Default        | Description                                       |
+| ------------------- | --------------------------------------------------------- | -------------- | ------------------------------------------------- |
+| `onBarcodeScanned`  | `(barcodes: Barcode[]) => void`                           | Required       | Callback when barcodes are detected               |
+| `device`            | `CameraDevice`                                            | Required       | Camera device from VisionCamera                   |
+| `format`            | `CameraDeviceFormat`                                      | Required       | Camera format from VisionCamera                   |
+| `barcodeTypes`      | `string[]`                                                | `[]`           | Array of barcode types to scan                    |
+| `fps`               | `number`                                                  | `5`            | Frame processing rate                             |
+| `scanMode`          | `'continuous' \| 'manual'`                                | `'continuous'` | Mode of scanning                                  |
+| `regionOfInterest`  | `{ x: number, y: number, width: number, height: number }` | `undefined`    | Define a specific region to scan                  |
+| `defaultResizeMode` | `'contain' \| 'cover'`                                    | `undefined`    | Resize mode for the camera view                   |
+| `checkInverted`     | `boolean`                                                 | `false`        | Enable scanning of inverted barcodes and QR codes |
 
-## Authors
+## Custom Hooks
 
-- [Olivier Louvignes](https://github.com/mgcrea) <<olivier@mgcrea.io>>
+The library provides the `useBarcodeScanner` hook that can be used for more advanced configurations:
+
+```jsx
+import { useBarcodeScanner } from "@kaizer433/vision-camera-barcode-scanner";
+
+// In your component:
+const { props, highlights } = useBarcodeScanner({
+  fps: 10,
+  barcodeTypes: ["ean-13", "qr"],
+  scanMode: "continuous",
+  checkInverted: true,
+  onBarcodeScanned: (barcodes) => {
+    console.log("Scanned barcodes:", barcodes);
+  },
+});
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-```txt
-The MIT License
+This project is licensed under the MIT License - see the original repository for details.
 
-Copyright (c) 2023 Olivier Louvignes <olivier@mgcrea.io>
+## Acknowledgments
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-```
+- This project is a fork of [mgcrea/vision-camera-barcode-scanner](https://github.com/mgcrea/vision-camera-barcode-scanner)
+- Thanks to the original author for the excellent library
